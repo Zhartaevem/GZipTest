@@ -50,9 +50,14 @@ namespace GZipTest.Validation
                 this.Errors.Add("Source file error. Source file must has .gz extension.");
             }
 
-            FileInfo destinationFile = new FileInfo(inputArgs[2]);
+            FileInfo destFile = new FileInfo(inputArgs[2]);
 
-            if (destinationFile.Exists)
+            if (inputArgs[0] == "compress" && !inputArgs[2].EndsWith(".gz") && new FileInfo(inputArgs[2] + ".gz").Exists)
+            {
+                this.Errors.Add("Destination file error. Destination file exist.");
+            }
+
+            if (destFile.Exists)
             {
                 this.Errors.Add("Destination file error. Destination file exist.");
             }
