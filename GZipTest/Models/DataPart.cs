@@ -24,7 +24,8 @@
         {
 
         }
-        
+
+
         public DataPart(byte[] data, long startPosition, long endPosition)
         {
             this.Data = data;

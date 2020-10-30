@@ -7,7 +7,6 @@ namespace GZipTest.Services
 {
     public class Archivator : ArchivatorAbstract
     {
-
         public Archivator(string fileName, string destinationFileName, ArchiveActionModel mode)
         {
             if (mode == ArchiveActionModel.Compress)
@@ -19,6 +18,7 @@ namespace GZipTest.Services
                 this._archivatorWork = new Extract(fileName, destinationFileName);
             }
         }
+
 
         /// <summary>
         /// Archive data from file
@@ -44,6 +44,7 @@ namespace GZipTest.Services
                 throw;
             }
         }
+
 
         /// <summary>
         /// Extract data from file

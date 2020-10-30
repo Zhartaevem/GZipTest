@@ -14,6 +14,7 @@ namespace GZipTest.Services
         /// </summary>
         private FileStream _fileStream { get; set; }
 
+
         /// <summary>
         /// Data writer to file
         /// </summary>
@@ -22,6 +23,7 @@ namespace GZipTest.Services
         {
             this._fileStream = File.Exists(destinationFileName) ? File.OpenWrite(destinationFileName) : File.Create(destinationFileName);
         }
+
 
         /// <summary>
         /// Write data in the specified order 
@@ -39,6 +41,8 @@ namespace GZipTest.Services
                 _fileStream.Write(data[i].Data);
             }
         }
+
+
         public void Dispose()
         {
             this._fileStream?.Dispose();

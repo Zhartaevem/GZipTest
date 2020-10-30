@@ -7,7 +7,6 @@ namespace GZipTest.AbstractClasses
     {
         protected IExecution _archivatorWork { get; set; }
 
-
         /// <summary>
         /// Archive data
         /// </summary>

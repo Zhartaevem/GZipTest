@@ -12,47 +12,27 @@ namespace GZipTest
     {
         private static IList<ICancelling> CancellingObjects { get; set; } = new List<ICancelling>();
 
+
         static int Main(string[] args)
         {
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelEventHandler);
 
-            Console.ReadKey();
-
             try
             {
+
+#if DEBUG
+                Console.ReadKey();
+
                 args = new string[3];
+
                 args[0] = @"compress";
-                args[1] = @"F:\Copressing\IMG_20180907_214752.jpg";
-                args[2] = @"F:\Copressing\IMG_20180907_214752";
-
-                //args[0] = @"decompress";
-                //args[1] = @"F:\Copressing\IMG_20180907_214752.gz";
-                //args[2] = @"F:\Copressing\Clever.bak";
-
-                //args[0] = @"compress";
-                //args[1] = @"F:\Copressing\cleverPark_backup_2020_09_08_233003_9708773.bak";
-                //args[2] = @"F:\Copressing\IMG_20180907_214752";
-
-                //args[0] = @"compress";
-                //args[1] = @"F:\Copressing\IMG_20180907_214752.jpg";
-                //args[2] = @"F:\Copressing\photo";
-
-                //args[0] = @"compress";
-                //args[1] = @"G:\Movies\LOTR\The.Lord.of.the.Rings-The Fellowship.of.the.Ring.2001.Blu-ray.Extended.1080p.x264-NiP.Rus.Eng.mkv";
-                //args[2] = @"F:\Copressing\Lotr";
-
-                //args[0] = @"compress";
-                //args[1] = @"G:\Movies\Breaking Bad (2008-2013) BDRip 1080p [KvK]\Breaking Bad - Season 5\5x01 - Live Free or Die.mkv";
-                //args[2] = @"F:\Copressing\Break";
-
-                //args[0] = @"compress";
-                //args[1] = "F:\\TestProjects\\GZipTest\\GZipTest.Tests\\/Data/sample-2mb-text-file.txt";
-                //args[2] = "F:\\TestProjects\\GZipTest\\GZipTest.Tests\\/Data/sample-2mb-text-file";
+                args[1] = @"G:\Movies\Breaking Bad (2008-2013) BDRip 1080p [KvK]\Breaking Bad - Season 5\5x01 - Live Free or Die.mkv";
+                args[2] = @"F:\Copressing\Break";
 
                 //args[0] = @"decompress";
                 //args[1] = @"F:\Copressing\Break.gz";
                 //args[2] = @"F:\Copressing\Breaking Bad.mkv";
-
+#endif
 
                 InputValidator validator = new InputValidator();
 
@@ -68,10 +48,15 @@ namespace GZipTest
                     return 1;
                 }
 
-                var stopwatcj = new Stopwatch();
+                Console.WriteLine("Start process");
 
-                stopwatcj.Start();
+#if DEBUG
 
+                Stopwatch stopwatch = new Stopwatch();
+
+                stopwatch.Start();
+
+#endif
                 switch (args[0].ToLower())
                 {
                     case "compress":
@@ -90,12 +75,15 @@ namespace GZipTest
                         break;
                 }
 
-                //НУжно убрать
-                stopwatcj.Stop();
+#if DEBUG
+                stopwatch.Stop();
 
-                Console.WriteLine($"Time {stopwatcj.ElapsedMilliseconds} millisecond.");
+                Console.WriteLine($"Time {stopwatch.ElapsedMilliseconds} millisecond.");
 
                 Console.ReadKey();
+#endif
+
+                Console.WriteLine("Finish process");
 
                 return 0;
             }
@@ -104,11 +92,12 @@ namespace GZipTest
             {
                 Console.WriteLine("Error is occured!\n Method: {0}\n Error description {1}", ex.TargetSite, ex.Message);
 
-                //НУжно убрать
                 Console.ReadKey();
+
                 return 1;
             }
         }
+
 
         protected static void CancelEventHandler(object sender, ConsoleCancelEventArgs args)
         {
@@ -130,7 +119,7 @@ namespace GZipTest
 
                 args.Cancel = true;
 
-                Console.ReadKey();
+                Console.WriteLine("\nCanceled");
             }
         }
     }

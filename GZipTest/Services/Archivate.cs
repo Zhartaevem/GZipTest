@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using GZipTest.Interfaces;
@@ -37,13 +38,12 @@ namespace GZipTest.Services
 
         private bool _disposed = false;
 
-        private bool _threadsRun = false;
-
-        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+        private bool _threadsAreRun = false;
 
         private ManualResetEvent manualResetEvent = new ManualResetEvent(false);
 
         private EventWaitHandle[] autoResetEvents;
+
 
         /// <summary>
         /// Constructor for <see cref="T:GZipTest.Services.Archivate" />
@@ -56,6 +56,7 @@ namespace GZipTest.Services
 
             this._initialFileName = fileName;
         }
+
 
         /// <summary>
         /// Cancel all works in each threads
@@ -76,6 +77,7 @@ namespace GZipTest.Services
             Dispose(true);
         }
 
+
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed)
@@ -83,8 +85,6 @@ namespace GZipTest.Services
 
             if (disposing)
             {
-                handle.Dispose();
-
                 this._provider?.Dispose();
 
                 this._writer?.Dispose();
@@ -99,6 +99,7 @@ namespace GZipTest.Services
 
             _disposed = true;
         }
+
 
         /// <summary>
         /// Start execution of archiving
@@ -123,7 +124,7 @@ namespace GZipTest.Services
             //read data from file while it has unread data
             while (_provider.GetData(initialBuffer) > 0)
             {
-                if (!_threadsRun)
+                if (!_threadsAreRun)
                 {
                     CreateAndRunThreads(threads, initialBuffer);
                 }
@@ -139,6 +140,7 @@ namespace GZipTest.Services
 
             }
         }
+
 
         private void CreateAndRunThreads(Thread[] threads, DataPart[] initialBuffer)
         {
@@ -177,7 +179,9 @@ namespace GZipTest.Services
                 threads[currentIndex].Start();
             }
 
-            _threadsRun = true;
+            autoResetEvents = autoResetEvents.Where(are => are != null).ToArray();
+
+            _threadsAreRun = true;
         }
 
 

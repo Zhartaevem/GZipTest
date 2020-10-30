@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using GZipTest.Interfaces;
 using GZipTest.Models;
 
@@ -40,6 +39,7 @@ namespace GZipTest.Services
         /// </summary>
         private long _readData { get; set; }
 
+
         /// <summary>
         /// Provide data from file
         /// </summary>
@@ -60,6 +60,7 @@ namespace GZipTest.Services
 
             this.ResetCounterProperties();
         }
+
 
         /// <summary>
         /// Get data from source file
@@ -99,6 +100,7 @@ namespace GZipTest.Services
             return _readData;
         }
 
+
         /// <summary>
         /// Reset properties to initial values
         /// </summary>
@@ -108,6 +110,7 @@ namespace GZipTest.Services
 
             this._readData = 0;
         }
+
 
         public void Dispose()
         {
