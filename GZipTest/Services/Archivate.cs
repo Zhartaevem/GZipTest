@@ -2,11 +2,9 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using GZipTest.Interfaces;
 using GZipTest.Models;
-using Microsoft.Win32.SafeHandles;
 
 namespace GZipTest.Services
 {
@@ -40,10 +38,13 @@ namespace GZipTest.Services
 
         private bool _threadsAreRun = false;
 
-        private ManualResetEvent manualResetEvent = new ManualResetEvent(false);
+        private ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
 
-        private EventWaitHandle[] autoResetEvents;
+        private EventWaitHandle[] _autoResetEvents;
 
+        private Thread[] _threads;
+
+        private readonly object _lockObject = new object();
 
         /// <summary>
         /// Constructor for <see cref="T:GZipTest.Services.Archivate" />
@@ -89,12 +90,16 @@ namespace GZipTest.Services
 
                 this._writer?.Dispose();
 
-                foreach (var autoResetEvent in this.autoResetEvents)
+                lock (_lockObject)
                 {
-                    autoResetEvent?.Dispose();
+                    foreach (var autoResetEvent in this._autoResetEvents)
+                    {
+                        autoResetEvent?.Dispose();
+                    }
                 }
 
-                this.manualResetEvent?.Dispose();
+                lock (_lockObject) this._manualResetEvent?.Dispose();
+
             }
 
             _disposed = true;
@@ -112,28 +117,27 @@ namespace GZipTest.Services
 
             this._provider = new DataProvider(_initialFileName, workBlockSize, workBlockSize * processorCount);
 
-            //use thread safe dictionary as buffer for reading data and archiving data
             DataPart[] initialBuffer = new DataPart[processorCount];
 
             this._writer = new FileWriter(_destinationFileName);
 
-            Thread[] threads = new Thread[processorCount];
+            this._threads = new Thread[processorCount];
 
-            autoResetEvents = new EventWaitHandle[processorCount];
+            _autoResetEvents = new EventWaitHandle[processorCount];
 
             //read data from file while it has unread data
-            while (_provider.GetData(initialBuffer) > 0)
+            while (_provider != null && _provider.GetData(initialBuffer) > 0)
             {
                 if (!_threadsAreRun)
                 {
-                    CreateAndRunThreads(threads, initialBuffer);
+                    CreateAndRunThreads(_threads, initialBuffer);
                 }
 
                 //permit to work
-                manualResetEvent.Set();
+                lock (_lockObject) _manualResetEvent?.Set();
 
                 //Wait all archiving tasks
-                WaitHandle.WaitAll(autoResetEvents);
+                WaitHandle.WaitAll(_autoResetEvents);
 
                 //Write all archived data to file
                 _writer.Write(initialBuffer);
@@ -153,33 +157,44 @@ namespace GZipTest.Services
 
                 int currentIndex = i;
 
-                autoResetEvents[currentIndex] = new AutoResetEvent(false);
+                _autoResetEvents[currentIndex] = new AutoResetEvent(false);
 
                 threads[currentIndex] = new Thread(() =>
                     {
-                        int currentIndex1 = currentIndex;
+                        int innerIndex = currentIndex;
 
-                        while (initialBuffer[currentIndex1].Data.Length > 0)
+                        while (initialBuffer[innerIndex].Data.Length > 0)
                         {
                             //reuse collection for saving archived data
-                            initialBuffer[currentIndex1].Data = Compress(initialBuffer[currentIndex1]);
+                            initialBuffer[innerIndex].Data = Compress(initialBuffer[innerIndex]);
 
                             //end of work signaling to autoResetEvents
-                            autoResetEvents[currentIndex1].Set();
+                            _autoResetEvents[innerIndex]?.Set();
 
                             //end of work signaling to manualResetEvent
-                            manualResetEvent.Reset();
+                            lock (_lockObject)
+                            {
+                                if (_manualResetEvent.SafeWaitHandle.IsClosed)
+                                {
+                                   break;
+                                }
+
+                                _manualResetEvent?.Reset();
+                            }
 
                             //wait then manualResetEvent permit to work
-                            manualResetEvent.WaitOne();
+                            _manualResetEvent?.WaitOne();
                         }
+
+                        //end of work signaling to autoResetEvents
+                        _autoResetEvents[innerIndex]?.Set();
                     })
                     { IsBackground = true };
 
                 threads[currentIndex].Start();
             }
 
-            autoResetEvents = autoResetEvents.Where(are => are != null).ToArray();
+            _autoResetEvents = _autoResetEvents.Where(are => are != null).ToArray();
 
             _threadsAreRun = true;
         }

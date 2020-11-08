@@ -14,6 +14,7 @@ namespace GZipTest.Services
         /// </summary>
         private FileStream _fileStream { get; set; }
 
+        private readonly object _lockObject = new object();
 
         /// <summary>
         /// Data writer to file
@@ -38,14 +39,26 @@ namespace GZipTest.Services
                     return;
                 }
 
-                _fileStream.Write(data[i].Data);
+                lock (_lockObject)
+                {
+                    if (_fileStream is null)
+                    {
+                        break;
+                    }
+
+                    _fileStream?.Write(data[i].Data);
+                }
             }
         }
 
 
         public void Dispose()
         {
-            this._fileStream?.Dispose();
+            lock (_lockObject)
+            {
+                this._fileStream?.Close();
+                _fileStream = null;
+            }
         }
     }
 }

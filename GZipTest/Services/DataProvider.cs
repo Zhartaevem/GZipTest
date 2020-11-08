@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading;
 using GZipTest.Interfaces;
 using GZipTest.Models;
 
@@ -39,6 +40,7 @@ namespace GZipTest.Services
         /// </summary>
         private long _readData { get; set; }
 
+        private readonly object _lockObject = new object();
 
         /// <summary>
         /// Provide data from file
@@ -82,11 +84,21 @@ namespace GZipTest.Services
                     realBufferSize = (int)_notReadSpace;
                 }
 
-                DataPart buffer = new DataPart(new byte[realBufferSize], _reader.Position, _reader.Position);
+                DataPart buffer;
 
-                _reader.Read(buffer.Data, 0, realBufferSize);
+                lock (_lockObject)
+                {
+                    if (_reader is null)
+                    {
+                        break;
+                    }
 
-                buffer.EndPosition = _reader.Position - 1;
+                    buffer = new DataPart(new byte[realBufferSize], _reader.Position, _reader.Position + realBufferSize);
+
+                    _reader?.Read(buffer.Data, 0, realBufferSize);
+                }
+
+                //buffer.EndPosition = _reader.Position - 1;
 
                 initialBuffer[dataIndex] = buffer;
 
@@ -96,6 +108,15 @@ namespace GZipTest.Services
 
                 dataIndex++;
             }
+
+            if (dataIndex != initialBuffer.Length)
+            {
+                for (int i = dataIndex; i < initialBuffer.Length; i++)
+                {
+                    initialBuffer[i] = new DataPart(new byte[0], 0, 0);
+                }
+            }
+
 
             return _readData;
         }
@@ -114,7 +135,11 @@ namespace GZipTest.Services
 
         public void Dispose()
         {
-            _reader?.Dispose();
+            lock (_lockObject)
+            {
+                _reader?.Close();
+                _reader = null;
+            }
         }
     }
 }
