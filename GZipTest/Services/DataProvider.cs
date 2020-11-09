@@ -113,7 +113,8 @@ namespace GZipTest.Services
             {
                 for (int i = dataIndex; i < initialBuffer.Length; i++)
                 {
-                    initialBuffer[i] = new DataPart(new byte[0], 0, 0);
+                    //initialBuffer[i] = new DataPart(new byte[0], 0, 0);
+                    initialBuffer[i] = null;
                 }
             }
 

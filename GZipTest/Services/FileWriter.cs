@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using GZipTest.Interfaces;
 using GZipTest.Models;
 
@@ -16,13 +17,26 @@ namespace GZipTest.Services
 
         private readonly object _lockObject = new object();
 
+        private readonly object _writingLockObject = new object();
+
+        private int _currentWritingIndex { get; set; }
+
+        private Dictionary<int, bool> _writingIndexes;
+
         /// <summary>
         /// Data writer to file
         /// </summary>
         /// <param name="destinationFileName">Destination path</param>
-        public FileWriter(string destinationFileName)
+        public FileWriter(string destinationFileName, int indexesCount)
         {
             this._fileStream = File.Exists(destinationFileName) ? File.OpenWrite(destinationFileName) : File.Create(destinationFileName);
+
+            this._writingIndexes = new Dictionary<int, bool>();
+
+            for (int i = 0; i < indexesCount; i++)
+            {
+                this._writingIndexes.Add(i, false);
+            }
         }
 
 
@@ -30,23 +44,43 @@ namespace GZipTest.Services
         /// Write data in the specified order 
         /// </summary>
         /// <param name="data">Dictionary where key is index number and DataPart <see cref="T:GZipTest.Models.DataPart" /></param>
-        public void Write(DataPart[] data)
+        /// <param name="index">index of data which can be write <see cref="T:GZipTest.Models.DataPart" /></param>
+        public void Write(DataPart[] data, int index)
         {
-            for (int i = 0; i < data.Length; i++)
+            lock (_writingLockObject)
             {
-                if (data[i] == null)
+                if (_currentWritingIndex == data.Length)
                 {
-                    return;
+                    _currentWritingIndex = 0;
                 }
 
-                lock (_lockObject)
+                this._writingIndexes[index] = true;
+
+                //if (index != _currentWritingIndex)
+                //{
+                //    return;
+                //}
+
+                for (int i = _currentWritingIndex; i < data.Length; i++)
                 {
-                    if (_fileStream is null)
+                    if (data[i] == null || !this._writingIndexes[i])
                     {
-                        break;
+                        return;
                     }
 
-                    _fileStream?.Write(data[i].Data);
+                    lock (_lockObject)
+                    {
+                        if (_fileStream is null)
+                        {
+                            break;
+                        }
+
+                        _fileStream?.Write(data[i].Data);
+                    }
+
+                    this._writingIndexes[i] = false;
+
+                    this._currentWritingIndex++;
                 }
             }
         }

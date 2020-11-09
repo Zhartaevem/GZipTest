@@ -25,14 +25,14 @@ namespace GZipTest
 
                 args = new string[3];
 
-                //args[0] = @"compress";
-                //args[1] = @"F:\Copressing\expansion2-speech-ruRU.MPQ";
-                //args[2] = @"F:\Copressing\Break";
-                
                 args[0] = @"compress";
-                args[1] = @"F:\WOW\WoWCircle 4.3.4\Data\world.MPQ";
+                args[1] = @"F:\Copressing\expansion2-speech-ruRU.MPQ";
                 args[2] = @"F:\Copressing\Break";
-                
+
+                //args[0] = @"compress";
+                //args[1] = @"F:\WOW\WoWCircle 4.3.4\Data\world.MPQ";
+                //args[2] = @"F:\Copressing\Break";
+
                 //args[0] = @"compress";
                 //args[1] = @"G:\Movies\Breaking Bad (2008-2013) BDRip 1080p [KvK]\Breaking Bad - Season 5\5x01 - Live Free or Die.mkv";
                 //args[2] = @"F:\Copressing\Break";

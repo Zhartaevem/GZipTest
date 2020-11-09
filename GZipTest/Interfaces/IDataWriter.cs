@@ -12,6 +12,7 @@ namespace GZipTest.Interfaces
         /// Write data from Dictionary <see cref="T:GZipTest.Models.DataPart" />
         /// </summary>
         /// <param name="data"></param>
-        void Write(DataPart[] data);
+        /// <param name="index"></param>
+        void Write(DataPart[] data, int index);
     }
 }

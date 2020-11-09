@@ -119,7 +119,7 @@ namespace GZipTest.Services
 
             DataPart[] initialBuffer = new DataPart[processorCount];
 
-            this._writer = new FileWriter(_destinationFileName);
+            this._writer = new FileWriter(_destinationFileName, processorCount);
 
             this._threads = new Thread[processorCount];
 
@@ -138,10 +138,6 @@ namespace GZipTest.Services
 
                 //Wait all archiving tasks
                 WaitHandle.WaitAll(_autoResetEvents);
-
-                //Write all archived data to file
-                _writer.Write(initialBuffer);
-
             }
         }
 
@@ -163,10 +159,14 @@ namespace GZipTest.Services
                     {
                         int innerIndex = currentIndex;
 
-                        while (initialBuffer[innerIndex].Data.Length > 0)
+                        //while (initialBuffer[innerIndex].Data.Length > 0)
+                        while (initialBuffer[innerIndex] != null)
                         {
                             //reuse collection for saving archived data
                             initialBuffer[innerIndex].Data = Compress(initialBuffer[innerIndex]);
+
+                            //Write all archived data to file
+                            _writer.Write(initialBuffer, innerIndex);
 
                             //end of work signaling to autoResetEvents
                             _autoResetEvents[innerIndex]?.Set();
@@ -176,7 +176,7 @@ namespace GZipTest.Services
                             {
                                 if (_manualResetEvent.SafeWaitHandle.IsClosed)
                                 {
-                                   break;
+                                    break;
                                 }
 
                                 _manualResetEvent?.Reset();
